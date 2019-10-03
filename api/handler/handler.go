@@ -24,19 +24,8 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	log.Info("Home page rendered")
 }
 
-// HandleRequests contains handler mappings
-func HandleRequests() {
-
-	// creates a new mux
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", homePage)
-	router.PathPrefix("/swagger/").Handler(swagger.Handler(swagger.URL("http://localhost:10000/swagger/doc.json")))
-
-	// chatbot needs webhook endpoint with GET and POST. GET endpoint is used
-	router.HandleFunc("/webhook", verification).Methods("GET")
-	router.HandleFunc("/webhook", handleMassages).Methods("POST")
-
-	log.Fatal(http.ListenAndServe(":10000", router))
+func healthEndpoint(w http.ResponseWriter, r *http.Request){
+	json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 }
 
 // Handle messages godoc
@@ -97,4 +86,20 @@ func prettyJSON(w http.ResponseWriter, list interface{}) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(pretty)
+}
+
+// HandleRequests contains handler mappings
+func HandleRequests() {
+
+	// creates a new mux
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/", homePage)
+	router.HandleFunc("/health", healthEndpoint)
+	router.PathPrefix("/swagger/").Handler(swagger.Handler(swagger.URL("http://localhost:10000/swagger/doc.json")))
+
+	// chatbot needs webhook endpoint with GET and POST. GET endpoint is used
+	router.HandleFunc("/webhook", verification).Methods("GET")
+	router.HandleFunc("/webhook", handleMassages).Methods("POST")
+
+	log.Fatal(http.ListenAndServe(":10000", router))
 }
