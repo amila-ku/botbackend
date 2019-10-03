@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/amila-ku/shoppingpal/api/handler"
+	"github.com/amila-ku/botbackend/api/handler"
 )
 
 // @title Facebook Messenger Bot API

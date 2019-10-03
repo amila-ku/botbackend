@@ -3,19 +3,21 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"io/ioutil"
-	"log"
 	"net/http"
 
-	_ "github.com/amila-ku/shoppingpal/api/docs"
-	"github.com/amila-ku/shoppingpal/pkg/entity"
-	store "github.com/amila-ku/shoppingpal/pkg/store"
+	_ "github.com/amila-ku/botbackend/api/docs"
+//	"github.com/amila-ku/botbackend/pkg/entity"
+//	store "github.com/amila-ku/botbackend/pkg/store"
 	"github.com/gorilla/mux"
 	swagger "github.com/swaggo/http-swagger"
+	"github.com/sirupsen/logrus"
 )
 
-// ItemList hods the list of items
-var ItemList = entity.NewItems()
+
+// Create a new instance of the logger. You can have any number of instances.
+var log = logrus.New()
 
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "ChatBot Server !")
@@ -31,8 +33,8 @@ func HandleRequests() {
 	router.PathPrefix("/swagger/").Handler(swagger.Handler(swagger.URL("http://localhost:10000/swagger/doc.json")))
 
 	// chatbot needs webhook endpoint with GET and POST. GET endpoint is used
-	router.HandleFunc("/webhook", returnAllItems).Methods("GET")
-	router.HandleFunc("/webhook", createNewItem).Methods("POST")
+	router.HandleFunc("/webhook", verification).Methods("GET")
+	router.HandleFunc("/webhook", handleMassages).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":10000", router))
 }
@@ -78,7 +80,7 @@ func verification(w http.ResponseWriter, r *http.Request) {
 	if mode != "" && token == verifyToken  {
 		w.WriteHeader(200)
 		w.Write([]byte(challenge))
-		log.info("Webhook verified")
+		log.Info("Webhook verified")
 	} else {
 		w.WriteHeader(404)
 		w.Write([]byte("Error, wrong validation token"))
