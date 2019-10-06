@@ -4,6 +4,6 @@ Chatbot backend API using golang.
 
 ## status
 
-![](https://github.com/amila-ku/shoppingpal/workflows/build/badge.svg)
+![](https://github.com/amila-ku/botbackend/workflows/build/badge.svg)
 
 # botbackend
