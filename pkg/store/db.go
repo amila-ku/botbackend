@@ -14,87 +14,17 @@ import (
 var region = "eu-central-1"
 var endpoint = "http://localhost:8000"
 
-type DatabaseService struct {
+//Database defines a interface for handling persistance
+type Database interface {
+	NewTable()
+	AddItem()
+	DeleteItem()
+	UpdateItem()
+}
+
+//
+type DynamoDBDatabase struct {
 	itemTable *dynamodb.DynamoDB
 	tableName string
 }
 
-//NewTable Creates a pointer to new new DynamoDB type
-func NewTable(tableName string) (*DatabaseService, error) {
-
-	config := &aws.Config{
-		Region:   aws.String(region),
-		Endpoint: aws.String(endpoint),
-	}
-
-	sess := session.Must(session.NewSession(config))
-
-	svc := dynamodb.New(sess)
-
-	input := &dynamodb.CreateTableInput{
-		AttributeDefinitions: []*dynamodb.AttributeDefinition{
-			{
-				AttributeName: aws.String("Id"),
-				AttributeType: aws.String("S"),
-			},
-			{
-				AttributeName: aws.String("name"),
-				AttributeType: aws.String("S"),
-			},
-		},
-		KeySchema: []*dynamodb.KeySchemaElement{
-			{
-				AttributeName: aws.String("Id"),
-				KeyType:       aws.String("HASH"),
-			},
-			{
-				AttributeName: aws.String("name"),
-				KeyType:       aws.String("RANGE"),
-			},
-		},
-		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(10),
-			WriteCapacityUnits: aws.Int64(10),
-		},
-		TableName: aws.String(tableName),
-	}
-
-	_, err := svc.CreateTable(input)
-	if err != nil {
-		log.Println("Got error calling CreateTable:")
-		log.Fatalln(err.Error())
-		os.Exit(1)
-	}
-
-	return &DatabaseService{
-		itemTable: svc,
-		tableName: tableName,
-	}, nil
-}
-
-func (i *DatabaseService) CreateItem(item entity.Message) error {
-	//now := time.Now()
-	//item.CreatedAt = now
-	//item.UpdatedAt = now
-	//item.Id = xid.New().String()
-	av, err := dynamodbattribute.MarshalMap(item)
-	if err != nil {
-		log.Println("Got error marshalling new item:")
-		log.Println(err.Error())
-		os.Exit(1)
-	}
-
-	input := &dynamodb.PutItemInput{
-		Item:      av,
-		TableName: aws.String(i.tableName),
-	}
-
-	_, err = i.itemTable.PutItem(input)
-	if err != nil {
-		log.Println("Got error calling PutItem:")
-		log.Println(err.Error())
-		os.Exit(1)
-	}
-
-	return err
-}
